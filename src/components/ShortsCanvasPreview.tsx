@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Play, Pause, Maximize2, Move, ZoomIn, Eye, Sparkles } from 'lucide-react';
+import { Play, Pause, Maximize2, Move, ZoomIn, Eye, EyeOff, Sparkles, ShieldCheck } from 'lucide-react';
 import { FramingState, OverlayConfig, TrimState, VideoSourceState } from '../types';
 
 interface ShortsCanvasPreviewProps {
@@ -29,6 +29,7 @@ export const ShortsCanvasPreview: React.FC<ShortsCanvasPreviewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+  const [showSafeZones, setShowSafeZones] = useState(false);
 
   // Render loop onto 9:16 Canvas
   const drawFrame = useCallback(() => {
@@ -318,6 +319,35 @@ export const ShortsCanvasPreview: React.FC<ShortsCanvasPreviewProps> = ({
           </div>
         </div>
 
+        {/* YouTube / TikTok Safe Zone Guide Box (Active when toggled) */}
+        {showSafeZones && (
+          <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between border-2 border-emerald-400/60 bg-emerald-500/5">
+            {/* Top Danger Zone (App Header / Search & Sound) */}
+            <div className="h-[12%] bg-red-500/20 border-b border-red-500/50 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-red-300 bg-black/60 px-2 py-0.5 rounded">
+                ⚠️ Zona Bahaya Atas (Header & Judul YT)
+              </span>
+            </div>
+
+            {/* Central Safe Content Area */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="px-3 py-1 rounded bg-emerald-950/80 border border-emerald-400/40 text-[10px] font-bold text-emerald-300 text-center shadow-lg">
+                ✅ AREA AMAN UTAMA (Safe Zone 9:16)
+                <div className="text-[8px] font-normal text-emerald-200/70">
+                  Teks, Wajah & Objek Utama Tidak Tertutup
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Danger Zone (Channel Handle, Description & Sound Bar) */}
+            <div className="h-[22%] bg-red-500/20 border-t border-red-500/50 flex flex-col items-center justify-center gap-1">
+              <span className="text-[9px] font-bold text-red-300 bg-black/60 px-2 py-0.5 rounded">
+                ⚠️ Zona Bahaya Bawah (Nama Channel, Deskripsi, Tombol Audio)
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Play / Pause Click Overlay */}
         <button
           id="btn-canvas-toggle-play"
@@ -339,7 +369,7 @@ export const ShortsCanvasPreview: React.FC<ShortsCanvasPreviewProps> = ({
       </div>
 
       {/* Quick Framing Bar underneath preview */}
-      <div className="w-full max-w-[340px] sm:max-w-[380px] mt-3 flex items-center justify-between gap-2 px-2 text-xs text-slate-400">
+      <div className="w-full max-w-[340px] sm:max-w-[380px] mt-3 flex items-center justify-between gap-2 px-1 text-xs text-slate-400">
         <div className="flex items-center gap-2">
           <ZoomIn className="w-3.5 h-3.5 text-slate-500" />
           <span className="text-[11px]">Zoom:</span>
@@ -351,18 +381,35 @@ export const ShortsCanvasPreview: React.FC<ShortsCanvasPreviewProps> = ({
             step="0.05"
             value={framing.zoom}
             onChange={(e) => onUpdateFraming({ zoom: parseFloat(e.target.value) })}
-            className="w-20 sm:w-24 accent-red-500 cursor-pointer"
+            className="w-16 sm:w-20 accent-red-500 cursor-pointer"
           />
           <span className="font-mono text-[11px] text-slate-300">{framing.zoom.toFixed(1)}x</span>
         </div>
 
-        <button
-          id="btn-reset-pan-position"
-          onClick={() => onUpdateFraming({ panX: 0, panY: 0, zoom: 1 })}
-          className="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition-colors"
-        >
-          Reset Posisi
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            id="btn-toggle-safe-zone"
+            type="button"
+            onClick={() => setShowSafeZones(!showSafeZones)}
+            className={`text-[10px] px-2 py-1 rounded flex items-center gap-1 transition-colors border ${
+              showSafeZones
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold'
+                : 'bg-slate-800 text-slate-400 hover:text-white border-slate-700'
+            }`}
+            title="Tampilkan panduan Safe Zone YouTube Shorts"
+          >
+            <ShieldCheck className="w-3 h-3" />
+            <span>Safe Zone</span>
+          </button>
+
+          <button
+            id="btn-reset-pan-position"
+            onClick={() => onUpdateFraming({ panX: 0, panY: 0, zoom: 1 })}
+            className="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition-colors"
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -22,7 +22,9 @@ import {
   Users,
   MessageSquare,
   Repeat2,
-  Scissors
+  Scissors,
+  BookOpen,
+  Terminal,
 } from 'lucide-react';
 import {
   AutoUploadPayload,
@@ -61,7 +63,7 @@ export const AutoUploadModal: React.FC<AutoUploadModalProps> = ({
   hashtags = [],
   clipDuration,
 }) => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'accounts' | 'history'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'accounts' | 'history' | 'guide'>('upload');
   const [accounts, setAccounts] = useState<SocialAccountsState>({
     youtube: {
       connected: true,
@@ -316,6 +318,18 @@ export const AutoUploadModal: React.FC<AutoUploadModalProps> = ({
                 {history.length}
               </span>
             )}
+          </button>
+          <button
+            id="btn-tab-server-guide"
+            onClick={() => setActiveTab('guide')}
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              activeTab === 'guide'
+                ? 'border-red-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Panduan Server (.env)</span>
           </button>
         </div>
 
@@ -906,6 +920,95 @@ export const AutoUploadModal: React.FC<AutoUploadModalProps> = ({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 4: PANDUAN SERVER & ENVIRONMENT */}
+          {activeTab === 'guide' && (
+            <div className="space-y-4 animate-in fade-in">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center gap-2 text-white font-bold text-xs">
+                  <Terminal className="w-4 h-4 text-emerald-400" />
+                  <span>Konfigurasi Environment Server (.env / .env.local)</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Untuk mengaktifkan pengunggahan otomatis langsung ke YouTube Data API dan TikTok Open API tanpa batas kuota lokal, simpan kredensial ini pada file <code className="text-red-400 font-mono">.env</code> di root proyek:
+                </p>
+
+                <div className="relative">
+                  <pre className="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto leading-relaxed select-all">
+{`# 1. Google & YouTube Data API v3
+YOUTUBE_CLIENT_ID="1234567890-abcdef.apps.googleusercontent.com"
+YOUTUBE_CLIENT_SECRET="GOCSPX-xxxxxxxxxxxxxxxx"
+YOUTUBE_REDIRECT_URI="${window.location.origin}/auth/callback/youtube"
+
+# 2. TikTok Content Posting API v2
+TIKTOK_CLIENT_KEY="aw123456789"
+TIKTOK_CLIENT_SECRET="xxxxxxxxxxxxxxxxxxxxxxxx"
+TIKTOK_REDIRECT_URI="${window.location.origin}/auth/callback/tiktok"
+
+# 3. Gemini AI Assistant (Viral Hooks & SEO Metadata)
+GEMINI_API_KEY="AIzaSy..."`}
+                  </pre>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        `# Google YouTube API\nYOUTUBE_CLIENT_ID=""\nYOUTUBE_CLIENT_SECRET=""\nYOUTUBE_REDIRECT_URI="${window.location.origin}/auth/callback/youtube"\n\n# TikTok API\nTIKTOK_CLIENT_KEY=""\nTIKTOK_CLIENT_SECRET=""\nTIKTOK_REDIRECT_URI="${window.location.origin}/auth/callback/tiktok"`,
+                        'env-snippet'
+                      )
+                    }
+                    className="absolute top-2 right-2 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 hover:text-white flex items-center gap-1 border border-slate-700"
+                  >
+                    {copiedLinkKey === 'env-snippet' ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                    <span>Salin .env</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step by step checklist */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-red-400">
+                    <span className="w-5 h-5 rounded-full bg-red-600/20 flex items-center justify-center text-[10px]">1</span>
+                    <span>Langkah YouTube Data API v3</span>
+                  </div>
+                  <ul className="list-disc list-inside text-slate-300 text-[11px] space-y-1.5 leading-normal">
+                    <li>Buka <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-red-400 underline">Google Cloud Console</a>.</li>
+                    <li>Aktifkan library <strong>YouTube Data API v3</strong>.</li>
+                    <li>Buat OAuth Client ID (pilih jenis <em>Web Application</em>).</li>
+                    <li>Tambahkan Authorized Redirect URI: <code className="text-slate-200 bg-slate-900 px-1 py-0.5 rounded font-mono">{window.location.origin}/auth/callback/youtube</code></li>
+                    <li>Salin Client ID & Client Secret ke <code className="text-red-400">.env</code>.</li>
+                  </ul>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-cyan-400">
+                    <span className="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center text-[10px]">2</span>
+                    <span>Langkah TikTok Posting API</span>
+                  </div>
+                  <ul className="list-disc list-inside text-slate-300 text-[11px] space-y-1.5 leading-normal">
+                    <li>Buka <a href="https://developers.tiktok.com/" target="_blank" rel="noopener noreferrer" className="text-cyan-400 underline">TikTok Developers</a>.</li>
+                    <li>Buat aplikasi dan aktifkan izin <strong>video.publish</strong> dan <strong>user.info.basic</strong>.</li>
+                    <li>Daftarkan Redirect URL: <code className="text-slate-200 bg-slate-900 px-1 py-0.5 rounded font-mono">{window.location.origin}/auth/callback/tiktok</code></li>
+                    <li>Salin Client Key dan Client Secret ke <code className="text-cyan-400">.env</code>.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Local Dev Run info */}
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
+                <div className="space-y-0.5">
+                  <span className="font-bold text-white block">Jalankan di Server Lokal:</span>
+                  <span className="text-[11px] text-slate-400">Jalankan perintah berikut di terminal komputer:</span>
+                </div>
+                <code className="bg-black px-3 py-1.5 rounded-lg border border-slate-800 text-emerald-400 font-mono text-xs select-all">
+                  npm run dev
+                </code>
+              </div>
             </div>
           )}
         </div>
