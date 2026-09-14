@@ -55,6 +55,27 @@ export interface FramingState {
   bgColor: string;
 }
 
+export interface AiSmartSegment {
+  id: string;
+  title: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  viralScore: number;
+  pacing: 'hook' | 'climactic' | 'story' | 'fast';
+  hookReason: string;
+  suggestedHookText: string;
+  recommendedShortsTitle: string;
+  captionExcerpt?: string;
+}
+
+export interface AiSmartTrimResponse {
+  segments: AiSmartSegment[];
+  overallAnalysis: string;
+  bestSegmentId: string;
+  suggestedPacingTip: string;
+}
+
 export interface AiShortsData {
   targetRegion?: ShortsRegion;
   titles: string[];

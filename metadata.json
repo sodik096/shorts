@@ -1,6 +1,6 @@
 {
   "name": "YouTube Shorts Video Maker",
-  "description": "Aplikasi pembuat konten YouTube Shorts dari URL video web atau upload dari PC dengan crop 9:16, trim 60 detik, banner hook, subtitle, AI metadata, serta auto upload ke YouTube dan TikTok dengan API.",
+  "description": "Aplikasi pembuat konten YouTube Shorts profesional dengan AI Smart Cut untuk pemotongan video otomatis, crop 9:16 mirror blur, trim 60 detik, banner hook, subtitle, AI generator, dan auto upload.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -27,8 +27,17 @@ import { AutoUploadModal } from './components/AutoUploadModal';
 import { ShortsGuideModal } from './components/ShortsGuideModal';
 import { LoginPage } from './components/LoginPage';
 import { ProfileModal } from './components/ProfileModal';
+import { AiSmartCutModal } from './components/AiSmartCutModal';
 import { SAMPLE_VIDEOS } from './data/sampleVideos';
-import { FramingState, OverlayConfig, TrimState, VideoSourceState, UserProfile, ShortsRegion } from './types';
+import {
+  FramingState,
+  OverlayConfig,
+  TrimState,
+  VideoSourceState,
+  UserProfile,
+  ShortsRegion,
+  AiSmartSegment,
+} from './types';
 import { getStoredUser, saveUserSession } from './utils/auth';
 
 const INITIAL_FRAMING: FramingState = {
@@ -113,6 +122,7 @@ export default function App() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isAutoUploadModalOpen, setIsAutoUploadModalOpen] = useState(false);
+  const [isSmartCutModalOpen, setIsSmartCutModalOpen] = useState(false);
   const [autoUploadBlobUrl, setAutoUploadBlobUrl] = useState<string | null>(null);
   const [autoUploadThumbUrl, setAutoUploadThumbUrl] = useState<string | null>(null);
 
@@ -234,6 +244,58 @@ export default function App() {
   // Update Overlay State
   const updateOverlay = (updates: Partial<OverlayConfig>) => {
     setOverlay((prev) => ({ ...prev, ...updates }));
+  };
+
+  // Apply AI Smart Segment Cut
+  const handleApplySmartSegment = (
+    segment: AiSmartSegment,
+    applyHookText: boolean,
+    applyTitle: boolean
+  ) => {
+    // 1. Update trim boundaries
+    setTrim((prev) => ({
+      ...prev,
+      startTime: segment.startTime,
+      endTime: segment.endTime,
+      currentTime: segment.startTime,
+      isPlaying: false,
+    }));
+
+    // 2. Seek video element
+    if (videoRef.current) {
+      videoRef.current.currentTime = segment.startTime;
+      videoRef.current.pause();
+    }
+
+    // 3. Optional: apply suggested hook text to overlay
+    if (applyHookText && segment.suggestedHookText) {
+      setOverlay((prev) => ({
+        ...prev,
+        hookText: segment.suggestedHookText,
+        showHook: true,
+      }));
+    }
+
+    // 4. Optional: update videoSource title
+    if (applyTitle && segment.recommendedShortsTitle && videoSource) {
+      setVideoSource((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: segment.recommendedShortsTitle,
+            }
+          : null
+      );
+    }
+  };
+
+  // Preview a specific time range in video
+  const handlePreviewTimeRange = (startTime: number, _endTime: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = startTime;
+      videoRef.current.play().catch(() => {});
+      setTrim((prev) => ({ ...prev, currentTime: startTime, isPlaying: true }));
+    }
   };
 
   // Load File from PC
@@ -556,36 +618,17 @@ export default function App() {
                 onUpdateFraming={updateFraming}
               />
 
-              {/* Action Buttons underneath canvas: Auto Upload, Export & Quick Snapshot */}
-              <div className="w-full max-w-[340px] sm:max-w-[380px] space-y-2.5">
-                <button
-                  id="btn-quick-auto-upload-api"
-                  onClick={() => {
-                    const canvas = canvasRef.current;
-                    if (canvas) {
-                      try {
-                        const thumb = canvas.toDataURL('image/png');
-                        setAutoUploadThumbUrl(thumb);
-                      } catch (e) {
-                        console.warn('Canvas snapshot tainted or unavailable:', e);
-                      }
-                    }
-                    setIsAutoUploadModalOpen(true);
-                  }}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:via-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-red-600/25 transition-all flex items-center justify-center gap-2"
-                >
-                  <UploadCloud className="w-4 h-4" />
-                  <span>⚡ Auto Upload ke YouTube & TikTok (API)</span>
-                </button>
-
+              {/* Action Buttons underneath canvas: Primary Export & Optional Auto Upload */}
+              <div className="w-full max-w-[340px] sm:max-w-[380px] space-y-2">
+                {/* Primary Export & Thumbnail Actions */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     id="btn-open-export-modal"
                     onClick={() => setIsExportModalOpen(true)}
-                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-600/25 transition-all flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4 text-emerald-400" />
-                    <span>Export / Render</span>
+                    <Download className="w-4 h-4" />
+                    <span>Export Shorts 9:16</span>
                   </button>
 
                   <button
@@ -603,12 +646,39 @@ export default function App() {
                         }
                       }
                     }}
-                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2"
                   >
                     <Eye className="w-4 h-4 text-amber-400" />
-                    <span>Thumbnail</span>
+                    <span>Simpan Thumbnail</span>
                   </button>
                 </div>
+
+                {/* Optional Auto Upload Feature Button */}
+                <button
+                  id="btn-quick-auto-upload-api"
+                  onClick={() => {
+                    const canvas = canvasRef.current;
+                    if (canvas) {
+                      try {
+                        const thumb = canvas.toDataURL('image/png');
+                        setAutoUploadThumbUrl(thumb);
+                      } catch (e) {
+                        console.warn('Canvas snapshot tainted or unavailable:', e);
+                      }
+                    }
+                    setIsAutoUploadModalOpen(true);
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 text-slate-300 hover:text-white text-[11px] font-medium border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between"
+                  title="Fitur opsional: Hubungkan & publish otomatis ke YouTube Shorts dan TikTok"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <UploadCloud className="w-3.5 h-3.5 text-red-400" />
+                    <span>Opsi Auto Upload API (YouTube & TikTok)</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                    Opsional
+                  </span>
+                </button>
               </div>
 
               {/* Timeline Trimmer (Always visible underneath preview for immediate scrubbing) */}
@@ -619,6 +689,7 @@ export default function App() {
                   onUpdateTrim={updateTrim}
                   onSeek={handleSeek}
                   onTogglePlay={togglePlay}
+                  onOpenAiSmartCut={() => setIsSmartCutModalOpen(true)}
                 />
               </div>
             </div>
@@ -670,6 +741,7 @@ export default function App() {
                   clipDuration={trim.endTime - trim.startTime}
                   targetRegion={targetRegion}
                   onChangeTargetRegion={handleRegionChange}
+                  onOpenAiSmartCut={() => setIsSmartCutModalOpen(true)}
                   onApplyHookBanner={(hookText) => {
                     updateOverlay({ hookText, showHook: true });
                     setActiveTab('style');
@@ -689,6 +761,19 @@ export default function App() {
       </main>
 
       {/* MODALS */}
+      {videoSource && (
+        <AiSmartCutModal
+          isOpen={isSmartCutModalOpen}
+          onClose={() => setIsSmartCutModalOpen(false)}
+          videoTitle={videoSource.name || 'Video YouTube Shorts'}
+          totalDuration={videoSource.duration || 60}
+          currentStartTime={trim.startTime}
+          currentEndTime={trim.endTime}
+          targetRegion={targetRegion}
+          onApplyTrim={handleApplySmartSegment}
+          onPreviewTimeRange={handlePreviewTimeRange}
+        />
+      )}
       <VideoSourceModal
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}

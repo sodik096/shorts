@@ -13,6 +13,7 @@ import {
   Globe2,
   TrendingUp,
   DollarSign,
+  Scissors,
 } from 'lucide-react';
 import { AiShortsData, ShortsRegion } from '../types';
 
@@ -24,6 +25,7 @@ interface AiAssistantPanelProps {
   onSelectTitle: (title: string) => void;
   targetRegion: ShortsRegion;
   onChangeTargetRegion: (region: ShortsRegion) => void;
+  onOpenAiSmartCut?: () => void;
 }
 
 const TOPIC_SUGGESTIONS_INDONESIA = [
@@ -50,6 +52,7 @@ export const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({
   onSelectTitle,
   targetRegion,
   onChangeTargetRegion,
+  onOpenAiSmartCut,
 }) => {
   const [topic, setTopic] = useState(currentTitle || '');
   const [language, setLanguage] = useState<'id' | 'en'>(
@@ -128,6 +131,38 @@ export const AiAssistantPanel: React.FC<AiAssistantPanelProps> = ({
           Gemini 3.8 Flash
         </span>
       </div>
+
+      {/* Target Market Selector Segmented Control */}
+      {onOpenAiSmartCut && (
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-violet-950/60 via-slate-900 to-red-950/40 border border-violet-700/40 flex items-center justify-between gap-3 shadow-lg shadow-violet-950/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-red-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-violet-600/30">
+              <Scissors className="w-4 h-4" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white">AI Smart Cut & Highlight Finder</span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-red-600 text-white uppercase">
+                  Viral
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Temukan momen paling viral otomatis dengan hook 3 detik awal & retensi tertinggi (≤59s).
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="btn-trigger-ai-cut-from-panel"
+            type="button"
+            onClick={onOpenAiSmartCut}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-red-600 hover:from-violet-500 hover:to-red-500 text-white text-xs font-bold transition-all shadow-md shadow-violet-600/30 shrink-0 flex items-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span>Potong via AI</span>
+          </button>
+        </div>
+      )}
 
       {/* Target Market Selector Segmented Control */}
       <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-2.5">
